@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu May 14 22:53:54 2020
-
 @author: Yunus
 """
 import pandas as pd
 import numpy as np
 import os
-import csv
 import scipy.io as sio
 
 # =============================================================================
@@ -16,44 +14,49 @@ import scipy.io as sio
 
 class pNeuma:
     
-    path = os.getcwd() + '/pneuma_sample_dataset/pneuma_piece.csv'
+    path = os.getcwd() + '/pneuma_sample_dataset/'
     
     df=pd.DataFrame()
+    splitted = []
     
-    def load(self):
-
-        headers = pd.read_csv(self.path, nrows=0).columns.tolist()
+    def load(self,filename):
+        
+        headers = pd.read_csv(self.path + filename, nrows=0).columns.tolist()
         word = headers[0]
 
-        splitted = word.split(';')
+        self.splitted = word.split(';')
         #print(splitted[0])
-        self.df = pd.read_csv(self.path,delimiter=';')
-
-        #print(df[splitted[1]])
-        return splitted
+        
+        self.df = pd.read_csv(self.path + filename,delimiter=';',low_memory=False)
+                
 # =============================================================================
-# saves the dataframe into matlab    
+# saves the dataframe as .mat    
 # =============================================================================
     def savetomatlab(self):
-#        truncDataFrame.rename(columns=lambda x:'col_' + x.replace(' ', '_'), inplace=True)  
-#        scipy.io.savemat('EEGdata2.mat', {'struct2':truncDataFrame.to_dict("list")})
+
         sio.savemat('pneuma_sample_dataset.mat', self.df)
-        
+        print("Dataframe saved as mat file in working directory")
 # =============================================================================
 # finds and returns count of vehicle type
 # =============================================================================
-    def vehicle_type_number(self,vehicle_type,dff):
+    def vehicle_type_number(self,vehicle_type):
         
         counter = 0        
-        allvehicle_types = self.df[dff[1]]
+        allvehicle_types = self.df[self.splitted[1]]
 
         for i in range(len(allvehicle_types)):
             
             vehicle = allvehicle_types[i]
             if vehicle.replace(' ', '') == vehicle_type:
                 counter += 1
-        
+        #print(counter)
         return counter
+# =============================================================================
+# 
+# =============================================================================
+#def vehicle_type_number(self,vehicle_type,dff):
+#    return
+
 # =============================================================================
 # returns all data of specified vehicle type e.g. car 
 #         
@@ -62,34 +65,58 @@ class pNeuma:
         
         typed_data = pd.DataFrame()
         
+        allvehicle_types = self.df[self.splitted[1]]  
+           
+        
         for i in range(len(self.df)):
-           allvehicle_types = self.df[dff[1]]  
            vehicle = allvehicle_types[i]
            if vehicle.replace(' ', '') == vehicle_type: 
                typed_data = typed_data.append(self.df.iloc[i, :])
         
-        print(typed_data)
+        
         return typed_data
 
 # =============================================================================
 # counts the number of vehicle in specified area which coord specified by 
 # latitude and longitude    
 # =============================================================================
-    def vehicle_count_in_area(self,lat,lon):
+    def vehicle_count_in_a_way(self,lat,lon,time):
+        count = 0
         
+        time_col = time / 400.0
+        time_col = 10 + time_col * 6
+        time_col_name = "Unnamed: " + str(time_col)
+        time_lat_col = time_col - 5 
+        time_lon_col = time_col - 4
+        
+        time_lat_name = "Unnamed: " + str(time_lat_col)
+        time_lon_name = "Unnamed: " + str(time_lon_col)
+        latitudes = self.df[time_lat_name]
+        longitudes = self.df[time_lon_name]
+        
+        lat = lat.sort()
+        lon = lon.sort()
+        for i in range(len(self.df)):
+            if latitudes[i] >= lat[0] and latitudes[i] <= lat[1]:
+                if longitudes[i] >= lon[0] and longitudes[i] <= lon[1]:
+                    count += 1
+        
+        return count
+    
+# =============================================================================
+# counts the number of vehicle in specified area which coord specified by 
+# latitude and longitude    
+# =============================================================================
+    def vehicle_count_in_area(self,lat,lon,time):
+
+
         return
-    
-        
-    
+
+
+# =============================================================================
+#     
+# =============================================================================
     def plot_():
         
         return
-# =============================================================================
-# MAIN    
-# =============================================================================
-pn = pNeuma()
-dff = pn.load()
-print(pn.vehicle_type_number("Car",dff))
-pn.vehicle_type_data("Motorcycle")
-
 
